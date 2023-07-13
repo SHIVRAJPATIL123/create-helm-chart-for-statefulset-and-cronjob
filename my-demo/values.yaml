@@ -1,0 +1,13 @@
+# my-demo/values.yaml
+
+replicaCount: 2
+image: postgres:latest
+postgresPassword: testpassword
+storageSize: 1Gi
+
+namespaceOverride: "my-namespace"
+releaseNameOverride: "cronjob"
+
+CronJob:
+  schedule: '"*/1 * * * *"'
+

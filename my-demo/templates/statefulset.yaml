@@ -1,0 +1,48 @@
+# my-demo/templates/statefulset.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "my-demo.fullname" . }}
+  namespace: {{ include "Release.Namespace" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: postgresql-db
+  serviceName: {{ include "my-demo.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: postgresql-db
+    spec:
+      containers:
+        - name: postgresql-db
+          image: {{ .Values.image }}
+          volumeMounts:
+            - name: postgresql-db-disk
+              mountPath: /data
+              readOnly: false
+          env:
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgresPassword }}
+            - name: PGDATA
+              value: /data/pgdata
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"
+      volumes:
+        - name: postgresql-db-disk
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-db-disk
+        labels:
+          user: scalegrid
+      spec:
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: {{ .Values.storageSize }}

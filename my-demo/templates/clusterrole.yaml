@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "my-demo.fullname" . }}
+  labels: 
+    {{- include "my-demo.labels" $ | nindent 4 }}
+  namespace: {{ include "Release.Namespace" . }}
+rules:   
+- apiGroups:
+  - "apps"
+  - "extensions"
+  - "batch"
+  resources:
+  - "pods"
+  - "services"
+  - "deployments"
+  - "configmaps"
+  verbs:
+  - "get"
+  - "list"
+  - "create"
+  - "update"
+  - "delete"
+  - "patch"

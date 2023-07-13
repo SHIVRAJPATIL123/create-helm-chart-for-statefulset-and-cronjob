@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "Release.Name" . }}
+  labels: 
+    {{- include "my-demo.labels" $ | nindent 4 }}
+  namespace: {{ include "Release.Namespace" . }}
+spec:
+  schedule: {{ .Values.CronJob.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          initContainers:
+          - name: change-permissions
+            image: busybox
+            command: ["/bin/sh", "-c"]
+            args:
+            - "cp /scripts/delete-dangling-pvcs.sh /etc/pre-install/ && cd /etc/pre-install && chmod +x delete-dangling-pvcs.sh && ls -l && ./delete-dangling-pvcs.sh"
+            volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+            - name: pre-install
+              mountPath: /etc/pre-install
+          securityContext:
+            runAsUser: 0
+          serviceAccountName: {{ include "my-demo.fullname" . }}
+          containers:
+          - name: hello
+            image: bitnami/kubectl:latest
+            command: ["/bin/sh", "-c"]
+            args:
+            - "/scripts/delete-dangling-pvcs.sh"
+            volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+              readOnly: false
+          restartPolicy: OnFailure
+          volumes:
+          - name: script-volume
+            configMap:
+              name: my-script
+              defaultMode: 0777
+          - name: pre-install
+            emptyDir: {}
+
+
